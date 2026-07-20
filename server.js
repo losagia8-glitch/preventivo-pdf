@@ -3,10 +3,12 @@ const path = require("path");
 const PDFDocument = require("pdfkit");
 
 const app = express();
-app.use(express.static(__dirname));
-
 const PORT = process.env.PORT || 3000;
 
+// Serve file statici (CSS, immagini, ecc.)
+app.use(express.static(__dirname));
+
+// Per leggere JSON dal POST
 app.use(express.json());
 
 // Serve index.html
@@ -19,7 +21,6 @@ app.post("/genera-preventivo", (req, res) => {
   const { cliente, data, totale, voci } = req.body;
   const listaVoci = JSON.parse(voci);
 
-  // Calcoli
   const subtotale = listaVoci.reduce((sum, v) => sum + (v.qta * v.prezzo), 0);
   const iva = (subtotale * 0.22).toFixed(2);
   const totaleFinale = (subtotale + parseFloat(iva)).toFixed(2);
@@ -37,17 +38,14 @@ app.post("/genera-preventivo", (req, res) => {
     console.log("Logo non trovato:", err);
   }
 
-  // Intestazione azienda
   doc.fontSize(18).font("Helvetica-Bold").text("MG22 PONTEGGI", 160, 50);
   doc.fontSize(10).font("Helvetica").text("Soluzioni professionali per ponteggi", 160, 70);
 
   doc.moveDown(3);
 
-  // TITOLO
   doc.fontSize(22).text("Preventivo", { align: "center" });
   doc.moveDown();
 
-  // DATI CLIENTE
   doc.fontSize(12).font("Helvetica-Bold").text("Cliente:");
   doc.font("Helvetica").text(cliente);
   doc.moveDown();
@@ -56,7 +54,6 @@ app.post("/genera-preventivo", (req, res) => {
   doc.font("Helvetica").text(data);
   doc.moveDown(2);
 
-  // TABELLA — STILE INV24
   const startX = 40;
   let y = doc.y;
 
@@ -89,7 +86,6 @@ app.post("/genera-preventivo", (req, res) => {
 
   doc.moveDown(2);
 
-  // SUBTOTALE / IVA / TOTALE
   doc.fontSize(14).font("Helvetica-Bold");
   doc.text(`Subtotale: €${subtotale.toFixed(2)}`, { align: "right" });
   doc.text(`IVA (22%): €${iva}`, { align: "right" });
@@ -97,7 +93,6 @@ app.post("/genera-preventivo", (req, res) => {
 
   doc.moveDown(3);
 
-  // TABELLA FINALE — DATI AZIENDA + BANCA
   doc.fontSize(12).font("Helvetica-Bold").text("Dati azienda", startX);
   doc.moveDown(0.5);
 
@@ -114,7 +109,6 @@ app.post("/genera-preventivo", (req, res) => {
   doc.end();
 });
 
-// Avvio server
 app.listen(PORT, () => {
   console.log("Server avviato sulla porta " + PORT);
 });
