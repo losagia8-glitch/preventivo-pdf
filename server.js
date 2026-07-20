@@ -14,21 +14,18 @@ app.get("/", (req, res) => {
 
 // Rotta per generare il PDF
 app.get("/genera-pdf", (req, res) => {
-  // Imposta header corretti per PDF
+  // Header corretti per PDF
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", "attachment; filename=preventivo.pdf");
 
   const doc = new PDFDocument();
-
-  // Invia il PDF al browser
   doc.pipe(res);
 
-  // Contenuto del PDF (provvisorio, poi lo personalizziamo col tuo modello)
+  // Contenuto di test (poi lo sostituiamo col tuo modello)
   doc.fontSize(20).text("Preventivo", { align: "center" });
   doc.moveDown();
-  doc.fontSize(12).text("Questo è un PDF di test generato dal server.");
+  doc.fontSize(12).text("PDF generato correttamente dal server.");
 
-  // Chiudi il documento
   doc.end();
 });
 
