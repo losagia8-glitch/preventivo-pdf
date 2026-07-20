@@ -3,11 +3,8 @@ const path = require("path");
 const PDFDocument = require("pdfkit");
 
 const app = express();
-
-// Porta dinamica per Render
 const PORT = process.env.PORT || 3000;
 
-// Per leggere JSON dal POST
 app.use(express.json());
 
 // Serve index.html
@@ -15,11 +12,16 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// Rotta POST che genera il PDF
+// Genera PDF stile INV24
 app.post("/genera-preventivo", (req, res) => {
   const { cliente, data, totale, voci } = req.body;
+  const listaVoci = JSON.parse(voci);
 
-  // Header corretti per PDF
+  // Calcoli
+  const subtotale = listaVoci.reduce((sum, v) => sum + (v.qta * v.prezzo), 0);
+  const iva = (subtotale * 0.22).toFixed(2);
+  const totaleFinale = (subtotale + parseFloat(iva)).toFixed(2);
+
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", "attachment; filename=preventivo.pdf");
 
@@ -33,49 +35,79 @@ app.post("/genera-preventivo", (req, res) => {
     console.log("Logo non trovato:", err);
   }
 
+  // Intestazione azienda
+  doc.fontSize(18).font("Helvetica-Bold").text("MG22 PONTEGGI", 160, 50);
+  doc.fontSize(10).font("Helvetica").text("Soluzioni professionali per ponteggi", 160, 70);
+
   doc.moveDown(3);
 
-  // Titolo
+  // TITOLO
   doc.fontSize(22).text("Preventivo", { align: "center" });
   doc.moveDown();
 
-  // Dati cliente
-  doc.fontSize(12).text(`Cliente: ${cliente}`);
-  doc.text(`Data: ${data}`);
+  // DATI CLIENTE
+  doc.fontSize(12).font("Helvetica-Bold").text("Cliente:");
+  doc.font("Helvetica").text(cliente);
   doc.moveDown();
 
-  // Tabella voci
-  doc.fontSize(14).text("Dettaglio voci:");
-  doc.moveDown();
+  doc.fontSize(12).font("Helvetica-Bold").text("Data:");
+  doc.font("Helvetica").text(data);
+  doc.moveDown(2);
 
-  const listaVoci = JSON.parse(voci);
+  // TABELLA — STILE INV24
+  const startX = 40;
+  let y = doc.y;
 
-  // Intestazione tabella
-  doc.fontSize(12).text("Descrizione", 40, doc.y);
-  doc.text("Qta", 250, doc.y);
-  doc.text("Prezzo", 300, doc.y);
-  doc.text("Subtotale", 380, doc.y);
-  doc.moveDown();
+  doc.fontSize(12).font("Helvetica-Bold");
+  doc.text("Descrizione", startX, y);
+  doc.text("Qta", startX + 250, y);
+  doc.text("Prezzo", startX + 300, y);
+  doc.text("Subtotale", startX + 380, y);
 
-  // Riga separatrice
-  doc.moveTo(40, doc.y).lineTo(500, doc.y).stroke();
-  doc.moveDown(0.5);
+  y += 20;
 
-  // Righe tabella
+  doc.moveTo(startX, y).lineTo(500, y).stroke();
+  y += 10;
+
+  doc.font("Helvetica");
+
   listaVoci.forEach(voce => {
-    const subtotale = (voce.qta * voce.prezzo).toFixed(2);
+    const subt = (voce.qta * voce.prezzo).toFixed(2);
 
-    doc.text(voce.descrizione, 40, doc.y);
-    doc.text(voce.qta, 250, doc.y);
-    doc.text(`€${voce.prezzo}`, 300, doc.y);
-    doc.text(`€${subtotale}`, 380, doc.y);
-    doc.moveDown();
+    doc.text(voce.descrizione, startX, y);
+    doc.text(voce.qta, startX + 250, y);
+    doc.text(`€${voce.prezzo}`, startX + 300, y);
+    doc.text(`€${subt}`, startX + 380, y);
+
+    y += 20;
+
+    doc.moveTo(startX, y).lineTo(500, y).stroke();
+    y += 10;
   });
 
+  doc.moveDown(2);
+
+  // SUBTOTALE / IVA / TOTALE
+  doc.fontSize(14).font("Helvetica-Bold");
+  doc.text(`Subtotale: €${subtotale.toFixed(2)}`, { align: "right" });
+  doc.text(`IVA (22%): €${iva}`, { align: "right" });
+  doc.text(`Totale: €${totaleFinale}`, { align: "right" });
+
+  doc.moveDown(3);
+
+  // TABELLA FINALE — DATI AZIENDA + BANCA
+  doc.fontSize(12).font("Helvetica-Bold").text("Dati azienda", startX);
+  doc.moveDown(0.5);
+
+  doc.font("Helvetica").text("MG22 PONTEGGI");
+  doc.text("Via Roma 123, Bergamo");
+  doc.text("P.IVA: 12345678901");
   doc.moveDown();
 
-  // Totale
-  doc.fontSize(16).text(`Totale: €${totale}`, { align: "right" });
+  doc.fontSize(12).font("Helvetica-Bold").text("Dati bancari");
+  doc.font("Helvetica").text("Banca Intesa Sanpaolo");
+  doc.text("IBAN: IT00A0000000000000000000000");
+  doc.text("SWIFT/BIC: BCITITMM");
 
   doc.end();
 });
