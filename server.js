@@ -38,7 +38,7 @@ app.post("/genera-preventivo", (req, res) => {
     console.log("Logo non trovato:", err);
   }
 
-  doc.fontSize(18).font("Helvetica-Bold").text("MG22 PONTEGGI", 160, 50);
+  doc.fontSize(18).font("Helvetica-Bold").text("MG2 PONTEGGI", 160, 50);
   doc.fontSize(10).font("Helvetica").text("Soluzioni professionali per ponteggi", 160, 70);
 
   doc.moveDown(3);
