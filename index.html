@@ -2,90 +2,57 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-      <img src="assets/logo.jpeg" alt="Logo" style="width:120px; display:block; margin:0 auto 20px;">
     <title>Generatore Preventivi PDF</title>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-    <h1>Genera Preventivo PDF</h1>
 
-    <form id="form-preventivo">
-        <label>Cliente:</label>
-        <input type="text" name="cliente" required><br><br>
+    <div class="container">
 
-        <label>Data:</label>
-        <input type="date" name="data" required><br><br>
-
-        <h3>Voci del preventivo</h3>
-        <div id="voci-container">
-            <div class="voce">
-                <input type="text" placeholder="Descrizione" class="descrizione">
-                <input type="number" placeholder="Qta" class="qta">
-                <input type="number" step="0.01" placeholder="Prezzo" class="prezzo">
-            </div>
+        <div class="header">
+            <img src="assets/logo.jpeg" alt="Logo">
+            <h1>Generatore Preventivi</h1>
+            <p class="subtitle">Crea preventivi professionali in pochi secondi</p>
         </div>
-        <button type="button" id="aggiungi-voce">Aggiungi voce</button>
-        <br><br>
 
-        <label>Totale:</label>
-        <input type="number" step="0.01" name="totale" required><br><br>
+        <div class="card">
 
-        <button type="submit">Genera PDF</button>
-    </form>
+            <form id="form-preventivo">
 
-    <script>
-        const form = document.getElementById('form-preventivo');
-        const vociContainer = document.getElementById('voci-container');
-        const btnAggiungiVoce = document.getElementById('aggiungi-voce');
+                <h2>Dati Cliente</h2>
 
-        btnAggiungiVoce.addEventListener('click', () => {
-            const div = document.createElement('div');
-            div.classList.add('voce');
-            div.innerHTML = `
-                <input type="text" placeholder="Descrizione" class="descrizione">
-                <input type="number" placeholder="Qta" class="qta">
-                <input type="number" step="0.01" placeholder="Prezzo" class="prezzo">
-            `;
-            vociContainer.appendChild(div);
-        });
+                <label>Cliente</label>
+                <input type="text" name="cliente" required>
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
+                <label>Data</label>
+                <input type="date" name="data" required>
 
-            const formData = new FormData(form);
+                <h2>Voci del Preventivo</h2>
 
-            const voci = [];
-            document.querySelectorAll('.voce').forEach(voceDiv => {
-                const descrizione = voceDiv.querySelector('.descrizione').value;
-                const qta = voceDiv.querySelector('.qta').value;
-                const prezzo = voceDiv.querySelector('.prezzo').value;
+                <div id="voci-container" class="voci-box">
+                    <div class="voce">
+                        <input type="text" placeholder="Descrizione" class="descrizione">
+                        <input type="number" placeholder="Qta" class="qta">
+                        <input type="number" step="0.01" placeholder="Prezzo" class="prezzo">
+                    </div>
+                </div>
 
-                if (descrizione && qta && prezzo) {
-                    voci.push({ descrizione, qta, prezzo });
-                }
-            });
+                <button type="button" id="aggiungi-voce" class="btn-secondary">+ Aggiungi voce</button>
 
-            const payload = {
-                cliente: formData.get('cliente'),
-                data: formData.get('data'),
-                totale: formData.get('totale'),
-                voci: JSON.stringify(voci)
-            };
+                <h2>Totale</h2>
 
-            const response = await fetch('/genera-preventivo', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+                <input type="number" step="0.01" name="totale" required>
 
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'preventivo.pdf';
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-        });
-    </script>
+                <button type="submit" class="btn-primary">Genera PDF</button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+
 </body>
 </html>
