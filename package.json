@@ -1,0 +1,12 @@
+{
+  "name": "preventivo-pdf",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.0",
+    "pdfkit": "^0.15.0"
+  }
+}

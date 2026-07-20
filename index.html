@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Generatore Preventivi PDF</title>
+</head>
+<body>
+    <h1>Genera Preventivo PDF</h1>
+
+    <form id="form-preventivo">
+        <label>Cliente:</label>
+        <input type="text" name="cliente" required><br><br>
+
+        <label>Data:</label>
+        <input type="date" name="data" required><br><br>
+
+        <h3>Voci del preventivo</h3>
+        <div id="voci-container">
+            <div class="voce">
+                <input type="text" placeholder="Descrizione" class="descrizione">
+                <input type="number" placeholder="Qta" class="qta">
+                <input type="number" step="0.01" placeholder="Prezzo" class="prezzo">
+            </div>
+        </div>
+        <button type="button" id="aggiungi-voce">Aggiungi voce</button>
+        <br><br>
+
+        <label>Totale:</label>
+        <input type="number" step="0.01" name="totale" required><br><br>
+
+        <button type="submit">Genera PDF</button>
+    </form>
+
+    <script>
+        const form = document.getElementById('form-preventivo');
+        const vociContainer = document.getElementById('voci-container');
+        const btnAggiungiVoce = document.getElementById('aggiungi-voce');
+
+        btnAggiungiVoce.addEventListener('click', () => {
+            const div = document.createElement('div');
+            div.classList.add('voce');
+            div.innerHTML = `
+                <input type="text" placeholder="Descrizione" class="descrizione">
+                <input type="number" placeholder="Qta" class="qta">
+                <input type="number" step="0.01" placeholder="Prezzo" class="prezzo">
+            `;
+            vociContainer.appendChild(div);
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+
+            const voci = [];
+            document.querySelectorAll('.voce').forEach(voceDiv => {
+                const descrizione = voceDiv.querySelector('.descrizione').value;
+                const qta = voceDiv.querySelector('.qta').value;
+                const prezzo = voceDiv.querySelector('.prezzo').value;
+
+                if (descrizione && qta && prezzo) {
+                    voci.push({ descrizione, qta, prezzo });
+                }
+            });
+
+            const payload = {
+                cliente: formData.get('cliente'),
+                data: formData.get('data'),
+                totale: formData.get('totale'),
+                voci: JSON.stringify(voci)
+            };
+
+            const response = await fetch('/genera-preventivo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'preventivo.pdf';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        });
+    </script>
+</body>
+</html>
