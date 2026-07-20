@@ -23,11 +23,20 @@ app.post("/genera-preventivo", (req, res) => {
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", "attachment; filename=preventivo.pdf");
 
-  const doc = new PDFDocument();
+  const doc = new PDFDocument({ margin: 40 });
   doc.pipe(res);
 
+  // LOGO
+  try {
+    doc.image("assets/logo.jpeg", 40, 40, { width: 100 });
+  } catch (err) {
+    console.log("Logo non trovato:", err);
+  }
+
+  doc.moveDown(3);
+
   // Titolo
-  doc.fontSize(20).text("Preventivo", { align: "center" });
+  doc.fontSize(22).text("Preventivo", { align: "center" });
   doc.moveDown();
 
   // Dati cliente
@@ -35,16 +44,32 @@ app.post("/genera-preventivo", (req, res) => {
   doc.text(`Data: ${data}`);
   doc.moveDown();
 
-  // Voci del preventivo
+  // Tabella voci
   doc.fontSize(14).text("Dettaglio voci:");
   doc.moveDown();
 
   const listaVoci = JSON.parse(voci);
 
+  // Intestazione tabella
+  doc.fontSize(12).text("Descrizione", 40, doc.y);
+  doc.text("Qta", 250, doc.y);
+  doc.text("Prezzo", 300, doc.y);
+  doc.text("Subtotale", 380, doc.y);
+  doc.moveDown();
+
+  // Riga separatrice
+  doc.moveTo(40, doc.y).lineTo(500, doc.y).stroke();
+  doc.moveDown(0.5);
+
+  // Righe tabella
   listaVoci.forEach(voce => {
-    doc.fontSize(12).text(
-      `${voce.descrizione} - Qta: ${voce.qta} - Prezzo: €${voce.prezzo}`
-    );
+    const subtotale = (voce.qta * voce.prezzo).toFixed(2);
+
+    doc.text(voce.descrizione, 40, doc.y);
+    doc.text(voce.qta, 250, doc.y);
+    doc.text(`€${voce.prezzo}`, 300, doc.y);
+    doc.text(`€${subtotale}`, 380, doc.y);
+    doc.moveDown();
   });
 
   doc.moveDown();
